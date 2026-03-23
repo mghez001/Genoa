@@ -13,6 +13,24 @@ const memberSchema = new mongoose.Schema(
     dateNaissance: { type: Date },
     dateDeces: { type: Date },
 
+    photoURL: { type: String },
+
+    emails: [{ type: String }],
+
+    telephones: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    adresses: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
     // Plusieurs possibles
     professions: [{ type: String }],
 
@@ -22,6 +40,11 @@ const memberSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    lockedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    lockedAt: { type: Date },
   },
   { timestamps: true }
 );

@@ -7,7 +7,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    password: {
+    passwordHash: {
+      type: String,
+      required: true,
+    },
+    name: {
       type: String,
       required: true,
     },
@@ -15,6 +19,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["admin", "editor", "reader"],
       default: "reader",
+    },
+    isApproved: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

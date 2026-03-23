@@ -29,6 +29,10 @@ const relationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Member",
     },
+    filiationType: {
+      type: String,
+      enum: ["biologique", "adoption"],
+    },
   },
   { timestamps: true }
 );
