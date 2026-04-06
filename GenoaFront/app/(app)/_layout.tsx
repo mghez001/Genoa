@@ -22,15 +22,22 @@ export default function Layout() {
           title: 'Statistiques',
         }}
       />
-      {canAccessModeration ? (
-        <Drawer.Screen
-          name="moderation"
-          options={{
-            drawerLabel: 'Moderation',
-            title: 'Moderation',
-          }}
-        />
-      ) : null}
+      <Drawer.Screen
+        name="moderation"
+        options={
+          canAccessModeration
+            ? {
+                drawerLabel: 'Moderation',
+                title: 'Moderation',
+              }
+            : {
+                title: 'Moderation',
+                drawerItemStyle: {
+                  display: 'none',
+                },
+              }
+        }
+      />
       <Drawer.Screen
         name="settings"
         options={{

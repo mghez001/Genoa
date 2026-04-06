@@ -156,7 +156,7 @@ export default function Index() {
         <Text>MODERATION</Text>
 
         <View>
-          <Text>Utilisateurs en attente d&apos;approbation</Text>
+          <Text>Utilisateurs en attente d'approbation</Text>
 
           {isLoading ? <Text>Chargement...</Text> : null}
           {error ? <Text>{error}</Text> : null}
