@@ -55,6 +55,48 @@ const approveUser = async (req, res) => {
   }
 };
 
+const rejectPendingUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-passwordHash");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Utilisateur introuvable",
+        error: "USER_NOT_FOUND",
+      });
+    }
+
+    if (user.isApproved) {
+      return res.status(400).json({
+        success: false,
+        message: "Ce compte a deja ete approuve",
+        error: "USER_ALREADY_APPROVED",
+      });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Utilisateur refuse",
+      data: {
+        user: {
+          _id: user._id,
+          email: user.email,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("rejectPendingUser error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+      error: "SERVER_ERROR",
+    });
+  }
+};
+
 const updateRole = async (req, res) => {
   try {
     const { role } = req.body;
@@ -110,4 +152,4 @@ const updateRole = async (req, res) => {
   }
 };
 
-module.exports = { getPendingUsers, approveUser, updateRole };
+module.exports = { getPendingUsers, approveUser, rejectPendingUser, updateRole };

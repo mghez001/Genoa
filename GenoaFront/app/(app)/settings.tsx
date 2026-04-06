@@ -11,7 +11,7 @@ export default function Index() {
           // The guard in `RootNavigator` redirects back to the sign-in screen.
           signOut();
         }}>
-        Sign Out
+        Déconnexion
       </Text>
     </View>
   );

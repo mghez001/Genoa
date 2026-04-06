@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 
 import { SessionProvider, useSession } from '../src/ctx';
 import { SplashScreenController } from '../src/splash';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function Root() {
   // Set up the auth context and render your layout inside of it.
@@ -21,14 +22,18 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!!session}>
-        <Stack.Screen name="(app)" />
-      </Stack.Protected>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
 
-      <Stack.Protected guard={!session}>
-        <Stack.Screen name="sign-in" />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="sign-up" />
+          <Stack.Screen name="pending-approval" />
+        </Stack.Protected>
+      </Stack>
+    </GestureHandlerRootView>
   );
 }

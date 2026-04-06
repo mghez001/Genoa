@@ -1,0 +1,126 @@
+import { StyleSheet } from 'react-native';
+
+export const authStyles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#f2ede4',
+  },
+  topShape: {
+    position: 'absolute',
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: '#d7e5d3',
+  },
+  bottomShape: {
+    position: 'absolute',
+    bottom: -140,
+    left: -90,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: '#e7dac5',
+  },
+  content: {
+    paddingHorizontal: 24,
+  },
+  card: {
+    backgroundColor: '#fffaf3',
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: '#dbcfbf',
+    paddingHorizontal: 22,
+    paddingVertical: 28,
+    shadowColor: '#5f5646',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 7,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#2d382d',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#685e4d',
+    marginBottom: 24,
+  },
+  fieldGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4f4638',
+    marginBottom: 8,
+  },
+  input: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: '#cec1ae',
+    borderRadius: 16,
+    backgroundColor: '#f8f2e9',
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#2f2a22',
+  },
+  messageBox: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 18,
+  },
+  messageInfo: {
+    backgroundColor: '#eef4eb',
+    borderWidth: 1,
+    borderColor: '#bfd2be',
+  },
+  messageError: {
+    backgroundColor: '#fbe9e8',
+    borderWidth: 1,
+    borderColor: '#e3b4b0',
+  },
+  messageText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4b4337',
+  },
+  primaryAction: {
+    marginTop: 10,
+    minHeight: 54,
+    borderRadius: 18,
+    backgroundColor: '#355947',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  primaryActionDisabled: {
+    opacity: 0.65,
+  },
+  primaryActionText: {
+    color: '#fffaf3',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  secondaryAction: {
+    marginTop: 18,
+    alignItems: 'center',
+  },
+  secondaryActionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#6f624d',
+  },
+  pendingActions: {
+    marginTop: 22,
+    gap: 12,
+  },
+});

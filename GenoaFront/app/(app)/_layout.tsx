@@ -1,10 +1,15 @@
 import { Drawer } from 'expo-router/drawer';
 
+import { useSession } from '../../src/ctx';
+
 export default function Layout() {
+  const { user } = useSession();
+  const canAccessModeration = user?.role === 'admin' || user?.role === 'editor';
+
   return (
-    <Drawer initialRouteName="tree">
+    <Drawer>
       <Drawer.Screen
-        name="tree"
+        name="index"
         options={{
           drawerLabel: 'Arbre',
           title: 'Arbre Généalogique',
@@ -17,13 +22,15 @@ export default function Layout() {
           title: 'Statistiques',
         }}
       />
-      <Drawer.Screen
-        name="moderation"
-        options={{
-          drawerLabel: 'Moderation',
-          title: 'Moderation',
-        }}
-      />
+      {canAccessModeration ? (
+        <Drawer.Screen
+          name="moderation"
+          options={{
+            drawerLabel: 'Moderation',
+            title: 'Moderation',
+          }}
+        />
+      ) : null}
       <Drawer.Screen
         name="settings"
         options={{
