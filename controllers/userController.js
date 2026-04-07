@@ -1,5 +1,39 @@
 const User = require("../models/User");
 
+const ROLE_HIERARCHY = {
+  reader: 1,
+  editor: 2,
+  admin: 3,
+};
+
+const getApprovedUsers = async (req, res) => {
+  try {
+    const currentUserRole = req.user?.role;
+    const currentUserLevel = ROLE_HIERARCHY[currentUserRole] || 0;
+    const users = await User.find({
+      isApproved: true,
+      _id: { $ne: req.user.userId },
+    }).select("-passwordHash");
+    const filteredUsers = users.filter((user) => {
+      const userLevel = ROLE_HIERARCHY[user.role] || 0;
+      return userLevel <= currentUserLevel;
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Utilisateurs approuves",
+      data: { users: filteredUsers },
+    });
+  } catch (err) {
+    console.error("getApprovedUsers error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+      error: "SERVER_ERROR",
+    });
+  }
+};
+
 const getPendingUsers = async (req, res) => {
   try {
     const users = await User.find({ isApproved: false }).select("-passwordHash");
@@ -100,6 +134,8 @@ const rejectPendingUser = async (req, res) => {
 const updateRole = async (req, res) => {
   try {
     const { role } = req.body;
+    const currentUserRole = req.user?.role;
+    const currentUserLevel = ROLE_HIERARCHY[currentUserRole] || 0;
 
     if (!role || !["admin", "editor", "reader"].includes(role)) {
       return res.status(400).json({
@@ -118,19 +154,39 @@ const updateRole = async (req, res) => {
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { role },
-      { new: true }
-    ).select("-passwordHash");
+    if ((ROLE_HIERARCHY[role] || 0) > currentUserLevel) {
+      return res.status(403).json({
+        success: false,
+        message: "Vous ne pouvez pas attribuer un rôle supérieur au vôtre",
+        error: "CANNOT_ASSIGN_HIGHER_ROLE",
+      });
+    }
 
-    if (!user) {
+    const targetUser = await User.findById(req.params.id).select("-passwordHash");
+
+    if (!targetUser) {
       return res.status(404).json({
         success: false,
         message: "Utilisateur introuvable",
         error: "USER_NOT_FOUND",
       });
     }
+
+    const targetUserLevel = ROLE_HIERARCHY[targetUser.role] || 0;
+
+    if (targetUserLevel > currentUserLevel) {
+      return res.status(403).json({
+        success: false,
+        message: "Vous ne pouvez pas modifier un utilisateur ayant un rôle supérieur au vôtre",
+        error: "CANNOT_EDIT_HIGHER_ROLE",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select("-passwordHash");
 
     return res.status(200).json({
       success: true,
@@ -152,4 +208,4 @@ const updateRole = async (req, res) => {
   }
 };
 
-module.exports = { getPendingUsers, approveUser, rejectPendingUser, updateRole };
+module.exports = { getApprovedUsers, getPendingUsers, approveUser, rejectPendingUser, updateRole };

@@ -5,33 +5,109 @@ import { Button, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   approvePendingUser,
   AuthApiError,
+  getApprovedUsers,
   getPendingUsers,
   rejectPendingUser,
+  updateUserRole,
 } from '../../src/authApi';
 import { useSession } from '../../src/ctx';
 
 export default function Index() {
   const { session, user } = useSession();
   const canAccessModeration = user?.role === 'admin' || user?.role === 'editor';
-  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [actionUserId, setActionUserId] = useState<string | null>(null);
+  const isAdmin = user?.role === 'admin';
+  const canManageRoles = user?.role === 'admin' || user?.role === 'editor';
+  const assignableRoles = user?.role === 'admin' ? ['reader', 'editor', 'admin'] : ['reader', 'editor'];
 
-  const selectedUser = pendingUsers.find((pendingUser: any) => pendingUser._id === selectedUserId) ?? null;
+  const [approvedUsers, setApprovedUsers] = useState<any[]>([]);
+  const [selectedRoleUserId, setSelectedRoleUserId] = useState<string | null>(null);
+  const [rolesFeedback, setRolesFeedback] = useState<string | null>(null);
+  const [rolesError, setRolesError] = useState<string | null>(null);
+  const [isRolesLoading, setIsRolesLoading] = useState(true);
+  const [roleActionUserId, setRoleActionUserId] = useState<string | null>(null);
+
+  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const [selectedPendingUserId, setSelectedPendingUserId] = useState<string | null>(null);
+  const [pendingFeedback, setPendingFeedback] = useState<string | null>(null);
+  const [pendingError, setPendingError] = useState<string | null>(null);
+  const [isPendingLoading, setIsPendingLoading] = useState(true);
+  const [pendingActionUserId, setPendingActionUserId] = useState<string | null>(null);
+
+  const selectedRoleUser =
+    approvedUsers.find((approvedUser: any) => approvedUser._id === selectedRoleUserId) ?? null;
+  const selectedPendingUser =
+    pendingUsers.find((pendingUser: any) => pendingUser._id === selectedPendingUserId) ?? null;
 
   useEffect(() => {
-    if (!session || !canAccessModeration) {
+    if (!session || !canManageRoles) {
+      setApprovedUsers([]);
+      setSelectedRoleUserId(null);
+      setIsRolesLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadApprovedUsers = async () => {
+      setIsRolesLoading(true);
+      setRolesError(null);
+
+      try {
+        const response = await getApprovedUsers(session);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setApprovedUsers(response.data.users);
+        setSelectedRoleUserId((currentSelectedRoleUserId) => {
+          if (
+            currentSelectedRoleUserId &&
+            response.data.users.some((approvedUser: any) => approvedUser._id === currentSelectedRoleUserId)
+          ) {
+            return currentSelectedRoleUserId;
+          }
+
+          return response.data.users[0]?._id ?? null;
+        });
+      } catch (loadError) {
+        if (isCancelled) {
+          return;
+        }
+
+        const message =
+          loadError instanceof AuthApiError
+            ? loadError.message
+            : 'Impossible de charger les utilisateurs approuves.';
+
+        setRolesError(message);
+      } finally {
+        if (!isCancelled) {
+          setIsRolesLoading(false);
+        }
+      }
+    };
+
+    void loadApprovedUsers();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [canManageRoles, session]);
+
+  useEffect(() => {
+    if (!session || !canAccessModeration || !isAdmin) {
+      setPendingUsers([]);
+      setSelectedPendingUserId(null);
+      setIsPendingLoading(false);
       return;
     }
 
     let isCancelled = false;
 
     const loadPendingUsers = async () => {
-      setIsLoading(true);
-      setError(null);
+      setIsPendingLoading(true);
+      setPendingError(null);
 
       try {
         const response = await getPendingUsers(session);
@@ -41,12 +117,12 @@ export default function Index() {
         }
 
         setPendingUsers(response.data.users);
-        setSelectedUserId((currentSelectedUserId) => {
+        setSelectedPendingUserId((currentSelectedPendingUserId) => {
           if (
-            currentSelectedUserId &&
-            response.data.users.some((pendingUser: any) => pendingUser._id === currentSelectedUserId)
+            currentSelectedPendingUserId &&
+            response.data.users.some((pendingUser: any) => pendingUser._id === currentSelectedPendingUserId)
           ) {
-            return currentSelectedUserId;
+            return currentSelectedPendingUserId;
           }
 
           return response.data.users[0]?._id ?? null;
@@ -61,10 +137,10 @@ export default function Index() {
             ? loadError.message
             : 'Impossible de charger les utilisateurs en attente.';
 
-        setError(message);
+        setPendingError(message);
       } finally {
         if (!isCancelled) {
-          setIsLoading(false);
+          setIsPendingLoading(false);
         }
       }
     };
@@ -74,75 +150,119 @@ export default function Index() {
     return () => {
       isCancelled = true;
     };
-  }, [canAccessModeration, session]);
+  }, [canAccessModeration, isAdmin, session]);
 
-  const handleApprove = async () => {
-    if (!session || !selectedUser) {
+  const handleRoleChange = async (role: string) => {
+    if (!session || !selectedRoleUser) {
       return;
     }
 
-    setActionUserId(selectedUser._id);
-    setFeedback(null);
-    setError(null);
+    setRoleActionUserId(selectedRoleUser._id);
+    setRolesFeedback(null);
+    setRolesError(null);
 
     try {
-      const response = await approvePendingUser(session, selectedUser._id);
+      const response = await updateUserRole(session, selectedRoleUser._id, role);
 
-      const remainingUsers = pendingUsers.filter((pendingUser: any) => pendingUser._id !== selectedUser._id);
+      setApprovedUsers((currentUsers) =>
+        currentUsers.map((approvedUser: any) => {
+          if (approvedUser._id !== selectedRoleUser._id) {
+            return approvedUser;
+          }
+
+          return {
+            ...approvedUser,
+            role,
+          };
+        })
+      );
+      setRolesFeedback(response.message);
+    } catch (roleError) {
+      const message =
+        roleError instanceof AuthApiError
+          ? roleError.message
+          : 'Impossible de modifier le role de cet utilisateur.';
+
+      setRolesError(message);
+    } finally {
+      setRoleActionUserId(null);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!session || !selectedPendingUser) {
+      return;
+    }
+
+    setPendingActionUserId(selectedPendingUser._id);
+    setPendingFeedback(null);
+    setPendingError(null);
+
+    try {
+      const response = await approvePendingUser(session, selectedPendingUser._id);
+      const approvedUser = {
+        ...selectedPendingUser,
+        isApproved: true,
+      };
+      const remainingUsers = pendingUsers.filter(
+        (pendingUser: any) => pendingUser._id !== selectedPendingUser._id
+      );
 
       setPendingUsers(remainingUsers);
-      setSelectedUserId((currentSelectedUserId) => {
-        if (currentSelectedUserId !== selectedUser._id) {
-          return currentSelectedUserId;
+      setSelectedPendingUserId((currentSelectedPendingUserId) => {
+        if (currentSelectedPendingUserId !== selectedPendingUser._id) {
+          return currentSelectedPendingUserId;
         }
 
         return remainingUsers[0]?._id ?? null;
       });
-      setFeedback(response.message);
+      setApprovedUsers((currentUsers) => [...currentUsers, approvedUser]);
+      setPendingFeedback(response.message);
     } catch (approveError) {
       const message =
         approveError instanceof AuthApiError
           ? approveError.message
           : "Impossible d'approuver cet utilisateur.";
 
-      setError(message);
+      setPendingError(message);
     } finally {
-      setActionUserId(null);
+      setPendingActionUserId(null);
     }
   };
 
   const handleReject = async () => {
-    if (!session || !selectedUser) {
+    if (!session || !selectedPendingUser) {
       return;
     }
 
-    setActionUserId(selectedUser._id);
-    setFeedback(null);
-    setError(null);
+    setPendingActionUserId(selectedPendingUser._id);
+    setPendingFeedback(null);
+    setPendingError(null);
 
     try {
-      const response = await rejectPendingUser(session, selectedUser._id);
-
-      const remainingUsers = pendingUsers.filter((pendingUser: any) => pendingUser._id !== selectedUser._id);
+      const response = await rejectPendingUser(session, selectedPendingUser._id);
+      const remainingUsers = pendingUsers.filter(
+        (pendingUser: any) => pendingUser._id !== selectedPendingUser._id
+      );
 
       setPendingUsers(remainingUsers);
-      setSelectedUserId((currentSelectedUserId) => {
-        if (currentSelectedUserId !== selectedUser._id) {
-          return currentSelectedUserId;
+      setSelectedPendingUserId((currentSelectedPendingUserId) => {
+        if (currentSelectedPendingUserId !== selectedPendingUser._id) {
+          return currentSelectedPendingUserId;
         }
 
         return remainingUsers[0]?._id ?? null;
       });
-      setFeedback(response.message);
+      setPendingFeedback(response.message);
     } catch (rejectError) {
       const message =
         rejectError instanceof AuthApiError
           ? rejectError.message
           : 'Impossible de refuser cet utilisateur.';
 
-      setError(message);
+      setPendingError(message);
     } finally {
-      setActionUserId(null);
+      setPendingActionUserId(null);
     }
   };
 
@@ -156,51 +276,110 @@ export default function Index() {
         <Text>MODERATION</Text>
 
         <View>
-          <Text>Utilisateurs en attente d'approbation</Text>
+          <Text>Changer le role des membres</Text>
 
-          {isLoading ? <Text>Chargement...</Text> : null}
-          {error ? <Text>{error}</Text> : null}
-          {feedback ? <Text>{feedback}</Text> : null}
+          {!canManageRoles ? <Text>Cette section est reservee aux editeurs et administrateurs.</Text> : null}
+          {canManageRoles && isRolesLoading ? <Text>Chargement...</Text> : null}
+          {canManageRoles && rolesError ? <Text>{rolesError}</Text> : null}
+          {canManageRoles && rolesFeedback ? <Text>{rolesFeedback}</Text> : null}
 
-          {!isLoading && pendingUsers.length === 0 ? (
+          {canManageRoles && !isRolesLoading && approvedUsers.length === 0 ? (
+            <Text>Aucun utilisateur approuve.</Text>
+          ) : null}
+
+          {canManageRoles &&
+            approvedUsers.map((approvedUser: any) => (
+              <Pressable
+                key={approvedUser._id}
+                onPress={() => {
+                  setSelectedRoleUserId(approvedUser._id);
+                }}>
+                <View>
+                  <Text>{approvedUser.name}</Text>
+                  <Text>{approvedUser.email}</Text>
+                  <Text>Role actuel: {approvedUser.role}</Text>
+                  <Text>
+                    {selectedRoleUserId === approvedUser._id
+                      ? 'Selectionne'
+                      : 'Cliquer pour selectionner'}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+        </View>
+
+        {canManageRoles && selectedRoleUser ? (
+          <View>
+            <Text>Utilisateur selectionne pour le changement de role</Text>
+            <Text>{selectedRoleUser.name}</Text>
+            <Text>{selectedRoleUser.email}</Text>
+            <Text>Role actuel: {selectedRoleUser.role}</Text>
+
+            {assignableRoles.map((role) => (
+              <Button
+                key={role}
+                disabled={roleActionUserId === selectedRoleUser._id}
+                onPress={() => {
+                  void handleRoleChange(role);
+                }}
+                title={roleActionUserId === selectedRoleUser._id ? 'Traitement...' : `Passer ${role}`}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        <View>
+          <Text>Utilisateurs en attente d&apos;approbation</Text>
+
+          {!isAdmin ? <Text>Cette section est reservee aux administrateurs.</Text> : null}
+          {isAdmin && isPendingLoading ? <Text>Chargement...</Text> : null}
+          {isAdmin && pendingError ? <Text>{pendingError}</Text> : null}
+          {isAdmin && pendingFeedback ? <Text>{pendingFeedback}</Text> : null}
+
+          {isAdmin && !isPendingLoading && pendingUsers.length === 0 ? (
             <Text>Aucun utilisateur en attente.</Text>
           ) : null}
 
-          {pendingUsers.map((pendingUser: any) => (
-            <Pressable
-              key={pendingUser._id}
-              onPress={() => {
-                setSelectedUserId(pendingUser._id);
-              }}>
-              <View>
-                <Text>{pendingUser.name}</Text>
-                <Text>{pendingUser.email}</Text>
-                <Text>Role: {pendingUser.role}</Text>
-                <Text>{selectedUserId === pendingUser._id ? 'Selectionne' : 'Cliquer pour selectionner'}</Text>
-              </View>
-            </Pressable>
-          ))}
+          {isAdmin &&
+            pendingUsers.map((pendingUser: any) => (
+              <Pressable
+                key={pendingUser._id}
+                onPress={() => {
+                  setSelectedPendingUserId(pendingUser._id);
+                }}>
+                <View>
+                  <Text>{pendingUser.name}</Text>
+                  <Text>{pendingUser.email}</Text>
+                  <Text>Role: {pendingUser.role}</Text>
+                  <Text>
+                    {selectedPendingUserId === pendingUser._id
+                      ? 'Selectionne'
+                      : 'Cliquer pour selectionner'}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
         </View>
 
-        {selectedUser ? (
+        {isAdmin && selectedPendingUser ? (
           <View>
             <Text>Utilisateur selectionne</Text>
-            <Text>{selectedUser.name}</Text>
-            <Text>{selectedUser.email}</Text>
+            <Text>{selectedPendingUser.name}</Text>
+            <Text>{selectedPendingUser.email}</Text>
 
             <Button
-              disabled={actionUserId === selectedUser._id}
+              disabled={pendingActionUserId === selectedPendingUser._id}
               onPress={() => {
                 void handleApprove();
               }}
-              title={actionUserId === selectedUser._id ? 'Traitement...' : 'Autoriser'}
+              title={pendingActionUserId === selectedPendingUser._id ? 'Traitement...' : 'Autoriser'}
             />
             <Button
-              disabled={actionUserId === selectedUser._id}
+              disabled={pendingActionUserId === selectedPendingUser._id}
               onPress={() => {
                 void handleReject();
               }}
-              title={actionUserId === selectedUser._id ? 'Traitement...' : 'Refuser'}
+              title={pendingActionUserId === selectedPendingUser._id ? 'Traitement...' : 'Refuser'}
             />
           </View>
         ) : null}

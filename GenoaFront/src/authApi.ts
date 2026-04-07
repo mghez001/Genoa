@@ -115,12 +115,31 @@ export async function getPendingUsers(token: string) {
   });
 }
 
+export async function getApprovedUsers(token: string) {
+  return apiRequest('/users', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export async function approvePendingUser(token: string, userId: string) {
   return apiRequest(`/users/${userId}/approve`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export async function updateUserRole(token: string, userId: string, role: string) {
+  return apiRequest(`/users/${userId}/role`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ role }),
   });
 }
 
