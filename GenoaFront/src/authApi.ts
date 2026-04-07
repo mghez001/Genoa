@@ -152,4 +152,13 @@ export async function rejectPendingUser(token: string, userId: string) {
   });
 }
 
+export async function getFamilyStats(token: string) {
+  return apiRequest('/stats/family', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export { API_BASE_URL };
