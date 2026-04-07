@@ -45,6 +45,15 @@ export default function Layout() {
           title: 'Paramètres',
         }}
       />
+      <Drawer.Screen
+        name="add"
+        options={{
+          title: 'Ajouter',
+          drawerItemStyle: {
+            display: 'none',
+          },
+        }}
+      />
     </Drawer>
   );
 }

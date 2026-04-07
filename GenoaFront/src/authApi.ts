@@ -161,4 +161,23 @@ export async function getFamilyStats(token: string) {
   });
 }
 
+export async function getMembers(token: string) {
+  return apiRequest('/members', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createMember(token: string, input: any) {
+  return apiRequest('/members', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+}
+
 export { API_BASE_URL };
