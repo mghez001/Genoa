@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Button, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import {
   approvePendingUser,
@@ -9,10 +9,11 @@ import {
   getPendingUsers,
   rejectPendingUser,
   updateUserRole,
-} from '../../src/authApi';
+} from '../../src/api';
+import { appStyles } from '../../src/appStyles';
 import { useSession } from '../../src/ctx';
 
-export default function Index() {
+export default function Moderation() {
   const { session, user } = useSession();
   const canAccessModeration = user?.role === 'admin' || user?.role === 'editor';
   const isAdmin = user?.role === 'admin';
@@ -78,7 +79,7 @@ export default function Index() {
         const message =
           loadError instanceof AuthApiError
             ? loadError.message
-            : 'Impossible de charger les utilisateurs approuves.';
+            : 'Impossible de charger les utilisateurs approuvés.';
 
         setRolesError(message);
       } finally {
@@ -181,7 +182,7 @@ export default function Index() {
       const message =
         roleError instanceof AuthApiError
           ? roleError.message
-          : 'Impossible de modifier le role de cet utilisateur.';
+          : 'Impossible de modifier le rôle de cet utilisateur.';
 
       setRolesError(message);
     } finally {
@@ -271,116 +272,155 @@ export default function Index() {
   }
 
   return (
-    <ScrollView>
-      <View>
-        <Text>MODERATION</Text>
+    <ScrollView style={appStyles.pageScreen} contentContainerStyle={appStyles.pageContent}>
+      <View style={appStyles.pageHeader}>
+        <Text style={appStyles.title}>Modération</Text>
+      </View>
 
-        <View>
-          <Text>Changer le role des membres</Text>
+      <View style={appStyles.card}>
+        <Text style={appStyles.cardTitle}>Changer le rôle des membres</Text>
 
-          {!canManageRoles ? <Text>Cette section est reservee aux editeurs et administrateurs.</Text> : null}
-          {canManageRoles && isRolesLoading ? <Text>Chargement...</Text> : null}
-          {canManageRoles && rolesError ? <Text>{rolesError}</Text> : null}
-          {canManageRoles && rolesFeedback ? <Text>{rolesFeedback}</Text> : null}
-
-          {canManageRoles && !isRolesLoading && approvedUsers.length === 0 ? (
-            <Text>Aucun utilisateur approuve.</Text>
-          ) : null}
-
-          {canManageRoles &&
-            approvedUsers.map((approvedUser: any) => (
-              <Pressable
-                key={approvedUser._id}
-                onPress={() => {
-                  setSelectedRoleUserId(approvedUser._id);
-                }}>
-                <View>
-                  <Text>{approvedUser.name}</Text>
-                  <Text>{approvedUser.email}</Text>
-                  <Text>Role actuel: {approvedUser.role}</Text>
-                  <Text>
-                    {selectedRoleUserId === approvedUser._id
-                      ? 'Selectionne'
-                      : 'Cliquer pour selectionner'}
-                  </Text>
-                </View>
-              </Pressable>
-            ))}
-        </View>
-
-        {canManageRoles && selectedRoleUser ? (
-          <View>
-            <Text>Utilisateur selectionne pour le changement de role</Text>
-            <Text>{selectedRoleUser.name}</Text>
-            <Text>{selectedRoleUser.email}</Text>
-            <Text>Role actuel: {selectedRoleUser.role}</Text>
-
-            {assignableRoles.map((role) => (
-              <Button
-                key={role}
-                disabled={roleActionUserId === selectedRoleUser._id}
-                onPress={() => {
-                  void handleRoleChange(role);
-                }}
-                title={roleActionUserId === selectedRoleUser._id ? 'Traitement...' : `Passer ${role}`}
-              />
-            ))}
+        {!canManageRoles ? (
+          <Text style={appStyles.itemText}>
+            Cette section est réservée aux éditeurs et aux administrateurs.
+          </Text>
+        ) : null}
+        {canManageRoles && isRolesLoading ? <Text style={appStyles.itemText}>Chargement...</Text> : null}
+        {canManageRoles && rolesError ? (
+          <View style={[appStyles.messageBox, appStyles.errorMessage]}>
+            <Text style={appStyles.messageText}>{rolesError}</Text>
           </View>
         ) : null}
+        {canManageRoles && rolesFeedback ? (
+          <View style={[appStyles.messageBox, appStyles.infoMessage]}>
+            <Text style={appStyles.messageText}>{rolesFeedback}</Text>
+          </View>
+        ) : null}
+        {canManageRoles && !isRolesLoading && approvedUsers.length === 0 ? (
+          <Text style={appStyles.itemText}>Aucun utilisateur approuvé.</Text>
+        ) : null}
 
-        <View>
-          <Text>Utilisateurs en attente d&apos;approbation</Text>
+        {canManageRoles &&
+          approvedUsers.map((approvedUser: any) => (
+            <Pressable
+              key={approvedUser._id}
+              onPress={() => {
+                setSelectedRoleUserId(approvedUser._id);
+              }}
+              style={[
+                appStyles.listItem,
+                selectedRoleUserId === approvedUser._id ? appStyles.listItemSelected : null,
+              ]}>
+              <Text style={appStyles.itemTitle}>{approvedUser.name}</Text>
+              <Text style={appStyles.itemText}>{approvedUser.email}</Text>
+              <Text style={appStyles.itemText}>Rôle actuel : {approvedUser.role}</Text>
+            </Pressable>
+          ))}
 
-          {!isAdmin ? <Text>Cette section est reservee aux administrateurs.</Text> : null}
-          {isAdmin && isPendingLoading ? <Text>Chargement...</Text> : null}
-          {isAdmin && pendingError ? <Text>{pendingError}</Text> : null}
-          {isAdmin && pendingFeedback ? <Text>{pendingFeedback}</Text> : null}
+        {canManageRoles && selectedRoleUser ? (
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Utilisateur sélectionné</Text>
+            <Text style={appStyles.itemTitle}>{selectedRoleUser.name}</Text>
+            <Text style={appStyles.itemText}>{selectedRoleUser.email}</Text>
+            <Text style={appStyles.itemText}>Rôle actuel : {selectedRoleUser.role}</Text>
 
-          {isAdmin && !isPendingLoading && pendingUsers.length === 0 ? (
-            <Text>Aucun utilisateur en attente.</Text>
-          ) : null}
-
-          {isAdmin &&
-            pendingUsers.map((pendingUser: any) => (
-              <Pressable
-                key={pendingUser._id}
-                onPress={() => {
-                  setSelectedPendingUserId(pendingUser._id);
-                }}>
-                <View>
-                  <Text>{pendingUser.name}</Text>
-                  <Text>{pendingUser.email}</Text>
-                  <Text>Role: {pendingUser.role}</Text>
-                  <Text>
-                    {selectedPendingUserId === pendingUser._id
-                      ? 'Selectionne'
-                      : 'Cliquer pour selectionner'}
+            <View style={appStyles.row}>
+              {assignableRoles.map((role) => (
+                <Pressable
+                  key={role}
+                  disabled={roleActionUserId === selectedRoleUser._id}
+                  onPress={() => {
+                    void handleRoleChange(role);
+                  }}
+                  style={[
+                    appStyles.secondaryButton,
+                    selectedRoleUser.role === role ? appStyles.secondaryButtonSelected : null,
+                  ]}>
+                  <Text style={appStyles.secondaryButtonText}>
+                    {roleActionUserId === selectedRoleUser._id ? 'Traitement...' : `Passer ${role}`}
                   </Text>
-                </View>
-              </Pressable>
-            ))}
-        </View>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={appStyles.card}>
+        <Text style={appStyles.cardTitle}>Utilisateurs en attente d&apos;approbation</Text>
+
+        {!isAdmin ? (
+          <Text style={appStyles.itemText}>Cette section est réservée aux administrateurs.</Text>
+        ) : null}
+        {isAdmin && isPendingLoading ? <Text style={appStyles.itemText}>Chargement...</Text> : null}
+        {isAdmin && pendingError ? (
+          <View style={[appStyles.messageBox, appStyles.errorMessage]}>
+            <Text style={appStyles.messageText}>{pendingError}</Text>
+          </View>
+        ) : null}
+        {isAdmin && pendingFeedback ? (
+          <View style={[appStyles.messageBox, appStyles.infoMessage]}>
+            <Text style={appStyles.messageText}>{pendingFeedback}</Text>
+          </View>
+        ) : null}
+        {isAdmin && !isPendingLoading && pendingUsers.length === 0 ? (
+          <Text style={appStyles.itemText}>Aucun utilisateur en attente.</Text>
+        ) : null}
+
+        {isAdmin &&
+          pendingUsers.map((pendingUser: any) => (
+            <Pressable
+              key={pendingUser._id}
+              onPress={() => {
+                setSelectedPendingUserId(pendingUser._id);
+              }}
+              style={[
+                appStyles.listItem,
+                selectedPendingUserId === pendingUser._id ? appStyles.listItemSelected : null,
+              ]}>
+              <Text style={appStyles.itemTitle}>{pendingUser.name}</Text>
+              <Text style={appStyles.itemText}>{pendingUser.email}</Text>
+              <Text style={appStyles.itemText}>Rôle : {pendingUser.role}</Text>
+            </Pressable>
+          ))}
 
         {isAdmin && selectedPendingUser ? (
-          <View>
-            <Text>Utilisateur selectionne</Text>
-            <Text>{selectedPendingUser.name}</Text>
-            <Text>{selectedPendingUser.email}</Text>
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Utilisateur sélectionné</Text>
+            <Text style={appStyles.itemTitle}>{selectedPendingUser.name}</Text>
+            <Text style={appStyles.itemText}>{selectedPendingUser.email}</Text>
 
-            <Button
-              disabled={pendingActionUserId === selectedPendingUser._id}
-              onPress={() => {
-                void handleApprove();
-              }}
-              title={pendingActionUserId === selectedPendingUser._id ? 'Traitement...' : 'Autoriser'}
-            />
-            <Button
-              disabled={pendingActionUserId === selectedPendingUser._id}
-              onPress={() => {
-                void handleReject();
-              }}
-              title={pendingActionUserId === selectedPendingUser._id ? 'Traitement...' : 'Refuser'}
-            />
+            <View style={appStyles.row}>
+              <Pressable
+                disabled={pendingActionUserId === selectedPendingUser._id}
+                onPress={() => {
+                  void handleApprove();
+                }}
+                style={[
+                  appStyles.primaryButton,
+                  pendingActionUserId === selectedPendingUser._id
+                    ? appStyles.primaryButtonDisabled
+                    : null,
+                ]}>
+                <Text style={appStyles.primaryButtonText}>
+                  {pendingActionUserId === selectedPendingUser._id ? 'Traitement...' : 'Autoriser'}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                disabled={pendingActionUserId === selectedPendingUser._id}
+                onPress={() => {
+                  void handleReject();
+                }}
+                style={[
+                  appStyles.secondaryButton,
+                  pendingActionUserId === selectedPendingUser._id
+                    ? appStyles.primaryButtonDisabled
+                    : null,
+                ]}>
+                <Text style={appStyles.secondaryButtonText}>Refuser</Text>
+              </Pressable>
+            </View>
           </View>
         ) : null}
       </View>

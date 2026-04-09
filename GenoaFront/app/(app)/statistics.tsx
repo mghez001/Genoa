@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
-import { AuthApiError, getFamilyStats } from '../../src/authApi';
+import { AuthApiError, getFamilyStats } from '../../src/api';
+import { appStyles } from '../../src/appStyles';
 import { useSession } from '../../src/ctx';
 
-export default function Index() {
+export default function Statistics() {
   const { session } = useSession();
   const [stats, setStats] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,39 +58,48 @@ export default function Index() {
   }, [session]);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
-      <View>
-        <Text>Statistiques familiales</Text>
+    <ScrollView style={appStyles.pageScreen} contentContainerStyle={appStyles.pageContent}>
+      <View style={appStyles.pageHeader}>
+        <Text style={appStyles.title}>Statistiques</Text>
       </View>
 
-      {isLoading ? <Text>Chargement...</Text> : null}
-      {error ? <Text>{error}</Text> : null}
+      {isLoading ? (
+        <View style={appStyles.card}>
+          <Text style={appStyles.itemText}>Chargement...</Text>
+        </View>
+      ) : null}
+
+      {error ? (
+        <View style={[appStyles.messageBox, appStyles.errorMessage]}>
+          <Text style={appStyles.messageText}>{error}</Text>
+        </View>
+      ) : null}
 
       {!isLoading && !error && stats ? (
         <>
-          <View>
-            <Text>Nombre total de membres</Text>
-            <Text>{stats.totalMembers}</Text>
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Nombre total de membres</Text>
+            <Text style={appStyles.statValue}>{stats.totalMembers}</Text>
           </View>
 
-          <View>
-            <Text>Nombre d'hommes</Text>
-            <Text>{stats.totalMen}</Text>
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Nombre d&apos;hommes</Text>
+            <Text style={appStyles.statValue}>{stats.totalMen}</Text>
           </View>
 
-          <View>
-            <Text>Nombre de femmes</Text>
-            <Text>{stats.totalWomen}</Text>
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Nombre de femmes</Text>
+            <Text style={appStyles.statValue}>{stats.totalWomen}</Text>
           </View>
 
-          <View>
-            <Text>Espérance de vie moyenne</Text>
-            <Text>{stats.averageLifeExpectancy ?? 'Non disponible'}</Text>
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Espérance de vie moyenne</Text>
+            <Text style={appStyles.statValue}>{stats.averageLifeExpectancy ?? 'Non disponible'}</Text>
           </View>
 
-          <View>
-            <Text>Nombre moyen d'enfants par couple</Text>
-            <Text>{stats.averageChildrenPerCouple}</Text>
+          <View style={appStyles.card}>
+            <Text style={appStyles.cardTitle}>Nombre moyen d&apos;enfants par couple</Text>
+            <Text style={appStyles.statValue}>{stats.averageChildrenPerCouple}</Text>
           </View>
         </>
       ) : null}

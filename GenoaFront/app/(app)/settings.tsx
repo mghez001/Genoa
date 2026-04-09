@@ -1,46 +1,52 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
+import { appStyles } from '../../src/appStyles';
 import { useSession } from '../../src/ctx';
 
-export default function Index() {
+export default function Settings() {
   const { signOut, user } = useSession();
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
-      <View>
-        <Text>Informations du compte</Text>
+    <ScrollView style={appStyles.pageScreen} contentContainerStyle={appStyles.pageContent}>
+      <View style={appStyles.pageHeader}>
+        <Text style={appStyles.title}>Paramètres</Text>
       </View>
 
-      <View>
-        <Text>Nom</Text>
-        <Text>{user?.name ?? 'Non renseigné'}</Text>
-      </View>
+      <View style={appStyles.card}>
+        <Text style={appStyles.cardTitle}>Informations du compte</Text>
 
-      <View>
-        <Text>Email</Text>
-        <Text>{user?.email ?? 'Non renseigné'}</Text>
-      </View>
+        <View style={appStyles.infoRow}>
+          <Text style={appStyles.infoLabel}>Nom</Text>
+          <Text style={appStyles.infoValue}>{user?.name ?? 'Non renseigné'}</Text>
+        </View>
 
-      <View>
-        <Text>Rôle</Text>
-        <Text>{user?.role ?? 'Non renseigné'}</Text>
-      </View>
+        <View style={appStyles.infoRow}>
+          <Text style={appStyles.infoLabel}>Email</Text>
+          <Text style={appStyles.infoValue}>{user?.email ?? 'Non renseigné'}</Text>
+        </View>
 
-      <View>
-        <Text>Compte approuvé</Text>
-        <Text>{user?.isApproved ? 'Oui' : 'Non'}</Text>
-      </View>
+        <View style={appStyles.infoRow}>
+          <Text style={appStyles.infoLabel}>Rôle</Text>
+          <Text style={appStyles.infoValue}>{user?.role ?? 'Non renseigné'}</Text>
+        </View>
 
-      <View>
-        <Text>Identifiant</Text>
-        <Text>{user?._id ?? 'Non renseigné'}</Text>
+        <View style={appStyles.infoRow}>
+          <Text style={appStyles.infoLabel}>Compte approuvé</Text>
+          <Text style={appStyles.infoValue}>{user?.isApproved ? 'Oui' : 'Non'}</Text>
+        </View>
+
+        <View style={appStyles.infoRow}>
+          <Text style={appStyles.infoLabel}>Identifiant</Text>
+          <Text style={appStyles.infoValue}>{user?._id ?? 'Non renseigné'}</Text>
+        </View>
       </View>
 
       <Pressable
         onPress={() => {
           void signOut();
-        }}>
-        <Text>Déconnexion</Text>
+        }}
+        style={appStyles.primaryButton}>
+        <Text style={appStyles.primaryButtonText}>Déconnexion</Text>
       </Pressable>
     </ScrollView>
   );

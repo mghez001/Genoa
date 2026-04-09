@@ -2,8 +2,8 @@ import { Link, router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 
-import { AuthApiError } from '../src/authApi';
-import { authStyles } from '../src/authStyles';
+import { AuthApiError } from '../src/api';
+import { appColors, appStyles } from '../src/appStyles';
 import { useSession } from '../src/ctx';
 
 export default function SignInScreen() {
@@ -48,75 +48,70 @@ export default function SignInScreen() {
   };
 
   return (
-    <View style={authStyles.screen}>
-      <View style={authStyles.topShape} />
-      <View style={authStyles.bottomShape} />
-      <View style={authStyles.content}>
-        <View style={authStyles.card}>
-          <Text style={authStyles.title}>Connexion</Text>
-          <Text style={authStyles.subtitle}>
-            Connectez-vous pour accéder à votre arbre généalogique et aux fonctionnalités de gestion.
-          </Text>
-
-          {feedback ? (
-            <View
-              style={[
-                authStyles.messageBox,
-                feedback.type === 'error' ? authStyles.messageError : authStyles.messageInfo,
-              ]}>
-              <Text style={authStyles.messageText}>{feedback.text}</Text>
-            </View>
-          ) : null}
-
-          <View style={authStyles.fieldGroup}>
-            <Text style={authStyles.label}>Email</Text>
-            <TextInput
-              autoCapitalize="none"
-              autoComplete="email"
-              keyboardType="email-address"
-              onChangeText={setEmail}
-              placeholder="email@exemple.com"
-              placeholderTextColor="#91836d"
-              style={authStyles.input}
-              value={email}
-            />
-          </View>
-
-          <View style={authStyles.fieldGroup}>
-            <Text style={authStyles.label}>Mot de passe</Text>
-            <TextInput
-              autoCapitalize="none"
-              onChangeText={setPassword}
-              placeholder="Votre mot de passe"
-              placeholderTextColor="#91836d"
-              secureTextEntry
-              style={authStyles.input}
-              value={password}
-            />
-          </View>
-
-          <Pressable
-            disabled={isSubmitting}
-            onPress={() => {
-              void handleSignIn();
-            }}
-            style={[
-              authStyles.primaryAction,
-              isSubmitting ? authStyles.primaryActionDisabled : null,
-            ]}>
-            {isSubmitting ? (
-              <ActivityIndicator color="#fffaf3" />
-            ) : (
-              <Text style={authStyles.primaryActionText}>Connexion</Text>
-            )}
-          </Pressable>
-
-          <Link href="/sign-up" asChild>
-            <Pressable style={authStyles.secondaryAction}>
-              <Text style={authStyles.secondaryActionText}>Pas de compte ? Inscrivez-vous !</Text>
-            </Pressable>
-          </Link>
+    <View style={appStyles.authScreen}>
+      <View style={appStyles.authCard}>
+        <View style={appStyles.pageHeader}>
+          <Text style={appStyles.title}>Connexion</Text>
         </View>
+
+        {feedback ? (
+          <View
+            style={[
+              appStyles.messageBox,
+              feedback.type === 'error' ? appStyles.errorMessage : appStyles.infoMessage,
+            ]}>
+            <Text style={appStyles.messageText}>{feedback.text}</Text>
+          </View>
+        ) : null}
+
+        <View style={appStyles.fieldGroup}>
+          <Text style={appStyles.label}>Email</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            onChangeText={setEmail}
+            placeholder="email@exemple.com"
+            placeholderTextColor={appColors.muted}
+            style={appStyles.input}
+            value={email}
+          />
+        </View>
+
+        <View style={appStyles.fieldGroup}>
+          <Text style={appStyles.label}>Mot de passe</Text>
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setPassword}
+            placeholder="Votre mot de passe"
+            placeholderTextColor={appColors.muted}
+            secureTextEntry
+            style={appStyles.input}
+            value={password}
+          />
+        </View>
+
+        <Pressable
+          disabled={isSubmitting}
+          onPress={() => {
+            void handleSignIn();
+          }}
+          style={[
+            appStyles.primaryButton,
+            isSubmitting ? appStyles.primaryButtonDisabled : null,
+          ]}>
+          {isSubmitting ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={appStyles.primaryButtonText}>Connexion</Text>
+          )}
+        </Pressable>
+
+        <Link href="/sign-up" asChild>
+          <Pressable style={appStyles.textButton}>
+            <Text style={appStyles.textButtonText}>Pas de compte ? Inscrivez-vous.</Text>
+          </Pressable>
+        </Link>
       </View>
     </View>
   );

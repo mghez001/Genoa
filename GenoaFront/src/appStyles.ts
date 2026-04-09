@@ -1,0 +1,246 @@
+import { StyleSheet } from 'react-native';
+
+export const appColors = {
+  background: '#f3f8f3',
+  surface: '#ffffff',
+  surfaceSoft: '#ebf3ea',
+  border: '#c8d8c7',
+  primary: '#2f6b46',
+  primaryDark: '#245338',
+  primarySoft: '#dbe9df',
+  text: '#1f3428',
+  muted: '#5f7468',
+  codeBackground: '#e4eee4',
+  dangerSoft: '#f7e2e0',
+  dangerBorder: '#d7a09c',
+};
+
+export const appStyles = StyleSheet.create({
+  authScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: appColors.background,
+    padding: 24,
+  },
+  pageScreen: {
+    flex: 1,
+    backgroundColor: appColors.background,
+  },
+  authCard: {
+    backgroundColor: appColors.surface,
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 20,
+    padding: 24,
+    gap: 16,
+  },
+  pageContent: {
+    padding: 24,
+    gap: 16,
+  },
+  pageContentWithFab: {
+    padding: 24,
+    paddingBottom: 112,
+    gap: 16,
+  },
+  pageHeader: {
+    gap: 6,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: appColors.text,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: appColors.text,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: appColors.text,
+  },
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: appColors.muted,
+  },
+  card: {
+    backgroundColor: appColors.surface,
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 18,
+    padding: 16,
+    gap: 12,
+  },
+  fieldGroup: {
+    gap: 6,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: appColors.text,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: appColors.surface,
+    color: appColors.text,
+    fontSize: 15,
+  },
+  primaryButton: {
+    backgroundColor: appColors.primary,
+    borderRadius: 14,
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.65,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: appColors.primary,
+    borderRadius: 14,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: appColors.surface,
+  },
+  secondaryButtonSelected: {
+    backgroundColor: appColors.primarySoft,
+  },
+  secondaryButtonText: {
+    color: appColors.primaryDark,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  ghostButton: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: appColors.surface,
+  },
+  ghostButtonText: {
+    color: appColors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  textButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+  },
+  textButtonText: {
+    color: appColors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  messageBox: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  infoMessage: {
+    backgroundColor: appColors.primarySoft,
+    borderColor: appColors.border,
+  },
+  errorMessage: {
+    backgroundColor: appColors.dangerSoft,
+    borderColor: appColors.dangerBorder,
+  },
+  messageText: {
+    color: appColors.text,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  listItem: {
+    backgroundColor: appColors.surface,
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 14,
+    padding: 14,
+    gap: 4,
+  },
+  listItemSelected: {
+    backgroundColor: appColors.primarySoft,
+    borderColor: appColors.primary,
+  },
+  itemTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: appColors.text,
+  },
+  itemText: {
+    fontSize: 14,
+    color: appColors.muted,
+  },
+  infoRow: {
+    gap: 4,
+    paddingVertical: 4,
+  },
+  infoLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: appColors.muted,
+    textTransform: 'uppercase',
+  },
+  infoValue: {
+    fontSize: 16,
+    color: appColors.text,
+  },
+  codeBlock: {
+    backgroundColor: appColors.codeBackground,
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 14,
+    padding: 14,
+  },
+  codeText: {
+    color: appColors.text,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: appColors.primaryDark,
+  },
+  floatingButton: {
+    position: 'absolute',
+    right: 24,
+    bottom: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: appColors.primary,
+  },
+  floatingButtonText: {
+    color: '#ffffff',
+    fontSize: 28,
+    fontWeight: '700',
+  },
+});

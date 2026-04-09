@@ -1,46 +1,42 @@
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import { authStyles } from '../src/authStyles';
+import { appStyles } from '../src/appStyles';
 import { useSession } from '../src/ctx';
 
 export default function PendingApprovalScreen() {
   const { pendingApprovalEmail } = useSession();
 
   return (
-    <View style={authStyles.screen}>
-      <View style={authStyles.topShape} />
-      <View style={authStyles.bottomShape} />
-      <View style={authStyles.content}>
-        <View style={authStyles.card}>
-          <Text style={authStyles.title}>Validation en attente</Text>
-          <Text style={authStyles.subtitle}>
-            Votre compte a bien ete cree. Un administrateur doit maintenant le valider avant votre
-            premiere connexion.
+    <View style={appStyles.authScreen}>
+      <View style={appStyles.authCard}>
+        <View style={appStyles.pageHeader}>
+          <Text style={appStyles.title}>Validation en attente</Text>
+          <Text style={appStyles.subtitle}>
+            Votre compte a bien été créé. Un administrateur doit maintenant le valider avant votre
+            première connexion.
           </Text>
-
-          <View style={[authStyles.messageBox, authStyles.messageInfo]}>
-            <Text style={authStyles.messageText}>
-              {pendingApprovalEmail
-                ? `Compte concerne : ${pendingApprovalEmail}`
-                : "Vous pourrez vous connecter des que l'administrateur aura valide votre compte."}
-            </Text>
-          </View>
-
-          <View style={authStyles.pendingActions}>
-            <Link href="/sign-in" asChild>
-              <Pressable style={authStyles.primaryAction}>
-                <Text style={authStyles.primaryActionText}>Retour a la connexion</Text>
-              </Pressable>
-            </Link>
-
-            <Link href="/sign-up" asChild>
-              <Pressable style={authStyles.secondaryAction}>
-                <Text style={authStyles.secondaryActionText}>Creer un autre compte</Text>
-              </Pressable>
-            </Link>
-          </View>
         </View>
+
+        <View style={[appStyles.messageBox, appStyles.infoMessage]}>
+          <Text style={appStyles.messageText}>
+            {pendingApprovalEmail
+              ? `Compte concerné : ${pendingApprovalEmail}`
+              : 'Vous pourrez vous connecter dès que votre compte sera validé.'}
+          </Text>
+        </View>
+
+        <Link href="/sign-in" asChild>
+          <Pressable style={appStyles.primaryButton}>
+            <Text style={appStyles.primaryButtonText}>Retour à la connexion</Text>
+          </Pressable>
+        </Link>
+
+        <Link href="/sign-up" asChild>
+          <Pressable style={appStyles.secondaryButton}>
+            <Text style={appStyles.secondaryButtonText}>Créer un autre compte</Text>
+          </Pressable>
+        </Link>
       </View>
     </View>
   );

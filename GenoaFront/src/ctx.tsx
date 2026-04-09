@@ -1,6 +1,6 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AuthApiError, getCurrentUser, loginUser, logoutUser, registerUser } from './authApi';
+import { AuthApiError, getCurrentUser, loginUser, logoutUser, registerUser } from './api';
 import { useStorageState } from './useStorageState';
 
 const AuthContext = createContext<any>({

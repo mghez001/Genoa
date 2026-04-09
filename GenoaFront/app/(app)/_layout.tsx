@@ -1,5 +1,6 @@
 import { Drawer } from 'expo-router/drawer';
 
+import { appColors } from '../../src/appStyles';
 import { useSession } from '../../src/ctx';
 
 export default function Layout() {
@@ -7,7 +8,25 @@ export default function Layout() {
   const canAccessModeration = user?.role === 'admin' || user?.role === 'editor';
 
   return (
-    <Drawer>
+    <Drawer
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: appColors.primary,
+        },
+        headerTintColor: '#ffffff',
+        headerTitleStyle: {
+          fontWeight: '700',
+        },
+        drawerActiveBackgroundColor: appColors.primarySoft,
+        drawerActiveTintColor: appColors.primaryDark,
+        drawerInactiveTintColor: appColors.text,
+        drawerStyle: {
+          backgroundColor: appColors.background,
+        },
+        sceneStyle: {
+          backgroundColor: appColors.background,
+        },
+      }}>
       <Drawer.Screen
         name="index"
         options={{
