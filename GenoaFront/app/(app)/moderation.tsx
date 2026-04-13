@@ -1,16 +1,17 @@
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 import {
   approvePendingUser,
   AuthApiError,
+  createUserAccount,
   getApprovedUsers,
   getPendingUsers,
   rejectPendingUser,
   updateUserRole,
 } from '../../src/api';
-import { appStyles } from '../../src/appStyles';
+import { appColors, appStyles } from '../../src/appStyles';
 import { useSession } from '../../src/ctx';
 
 export default function Moderation() {
@@ -19,6 +20,14 @@ export default function Moderation() {
   const canAccessModeration = isAdmin;
   const canManageRoles = isAdmin;
   const assignableRoles = ['reader', 'editor', 'admin'];
+
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState('reader');
+  const [createUserFeedback, setCreateUserFeedback] = useState<string | null>(null);
+  const [createUserError, setCreateUserError] = useState<string | null>(null);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
 
   const [approvedUsers, setApprovedUsers] = useState<any[]>([]);
   const [selectedRoleUserId, setSelectedRoleUserId] = useState<string | null>(null);
@@ -38,6 +47,13 @@ export default function Moderation() {
     approvedUsers.find((approvedUser: any) => approvedUser._id === selectedRoleUserId) ?? null;
   const selectedPendingUser =
     pendingUsers.find((pendingUser: any) => pendingUser._id === selectedPendingUserId) ?? null;
+
+  const resetCreateUserForm = () => {
+    setNewUserName('');
+    setNewUserEmail('');
+    setNewUserPassword('');
+    setNewUserRole('reader');
+  };
 
   useEffect(() => {
     if (!session || !canManageRoles) {
@@ -190,6 +206,50 @@ export default function Moderation() {
     }
   };
 
+  const handleCreateUser = async () => {
+    if (!session) {
+      setCreateUserError('Vous devez être connecté.');
+      setCreateUserFeedback(null);
+      return;
+    }
+
+    const normalizedName = newUserName.trim();
+    const normalizedEmail = newUserEmail.trim().toLowerCase();
+
+    if (!normalizedName || !normalizedEmail || !newUserPassword) {
+      setCreateUserError('Nom, email et mot de passe sont requis.');
+      setCreateUserFeedback(null);
+      return;
+    }
+
+    setIsCreatingUser(true);
+    setCreateUserError(null);
+    setCreateUserFeedback(null);
+
+    try {
+      const response = await createUserAccount(session, {
+        name: normalizedName,
+        email: normalizedEmail,
+        password: newUserPassword,
+        role: newUserRole,
+      });
+
+      setApprovedUsers((currentUsers) => [...currentUsers, response.data.user]);
+      setSelectedRoleUserId(response.data.user._id);
+      setCreateUserFeedback(response.message);
+      resetCreateUserForm();
+    } catch (createError) {
+      const message =
+        createError instanceof AuthApiError
+          ? createError.message
+          : 'Impossible de créer ce compte.';
+
+      setCreateUserError(message);
+    } finally {
+      setIsCreatingUser(false);
+    }
+  };
+
   const handleApprove = async () => {
     if (!session || !selectedPendingUser) {
       return;
@@ -275,6 +335,91 @@ export default function Moderation() {
     <ScrollView style={appStyles.pageScreen} contentContainerStyle={appStyles.pageContent}>
       <View style={appStyles.pageHeader}>
         <Text style={appStyles.title}>Modération</Text>
+      </View>
+
+      <View style={appStyles.card}>
+        <Text style={appStyles.cardTitle}>Créer un compte utilisateur</Text>
+
+        <View style={appStyles.fieldGroup}>
+          <Text style={appStyles.label}>Nom</Text>
+          <TextInput
+            value={newUserName}
+            onChangeText={setNewUserName}
+            placeholder="Nom de la personne"
+            placeholderTextColor={appColors.muted}
+            style={appStyles.input}
+          />
+        </View>
+
+        <View style={appStyles.fieldGroup}>
+          <Text style={appStyles.label}>Email</Text>
+          <TextInput
+            value={newUserEmail}
+            onChangeText={setNewUserEmail}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            placeholder="email@exemple.com"
+            placeholderTextColor={appColors.muted}
+            style={appStyles.input}
+          />
+        </View>
+
+        <View style={appStyles.fieldGroup}>
+          <Text style={appStyles.label}>Mot de passe</Text>
+          <TextInput
+            value={newUserPassword}
+            onChangeText={setNewUserPassword}
+            autoCapitalize="none"
+            placeholder="Mot de passe temporaire"
+            placeholderTextColor={appColors.muted}
+            secureTextEntry
+            style={appStyles.input}
+          />
+        </View>
+
+        <View style={appStyles.fieldGroup}>
+          <Text style={appStyles.label}>Rôle</Text>
+          <View style={appStyles.row}>
+            {assignableRoles.map((role) => (
+              <Pressable
+                key={role}
+                onPress={() => setNewUserRole(role)}
+                style={[
+                  appStyles.secondaryButton,
+                  newUserRole === role ? appStyles.secondaryButtonSelected : null,
+                ]}>
+                <Text style={appStyles.secondaryButtonText}>{role}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        <Pressable
+          disabled={isCreatingUser}
+          onPress={() => {
+            void handleCreateUser();
+          }}
+          style={[
+            appStyles.primaryButton,
+            isCreatingUser ? appStyles.primaryButtonDisabled : null,
+          ]}>
+          <Text style={appStyles.primaryButtonText}>
+            {isCreatingUser ? 'Création...' : 'Créer le compte'}
+          </Text>
+        </Pressable>
+
+        {createUserFeedback ? (
+          <View style={[appStyles.messageBox, appStyles.infoMessage]}>
+            <Text style={appStyles.messageText}>{createUserFeedback}</Text>
+          </View>
+        ) : null}
+
+        {createUserError ? (
+          <View style={[appStyles.messageBox, appStyles.errorMessage]}>
+            <Text style={appStyles.messageText}>{createUserError}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={appStyles.card}>

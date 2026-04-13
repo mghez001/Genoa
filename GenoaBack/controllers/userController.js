@@ -1,9 +1,74 @@
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 const ROLE_HIERARCHY = {
   reader: 1,
   editor: 2,
   admin: 3,
+};
+
+const createUser = async (req, res) => {
+  try {
+    const { name, email, password, role = "reader" } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Tous les champs sont requis",
+        error: "MISSING_FIELDS",
+      });
+    }
+
+    if (!["admin", "editor", "reader"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Rôle invalide. Valeurs acceptées : admin, editor, reader",
+        error: "INVALID_ROLE",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "Cet email est déjà utilisé",
+        error: "EMAIL_ALREADY_EXISTS",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      passwordHash,
+      role,
+      isApproved: true,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Compte créé",
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          isApproved: user.isApproved,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("createUser error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+      error: "SERVER_ERROR",
+    });
+  }
 };
 
 const getApprovedUsers = async (req, res) => {
@@ -208,4 +273,4 @@ const updateRole = async (req, res) => {
   }
 };
 
-module.exports = { getApprovedUsers, getPendingUsers, approveUser, rejectPendingUser, updateRole };
+module.exports = { createUser, getApprovedUsers, getPendingUsers, approveUser, rejectPendingUser, updateRole };

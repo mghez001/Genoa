@@ -124,6 +124,16 @@ export async function getApprovedUsers(token: string) {
   });
 }
 
+export async function createUserAccount(token: string, input: any) {
+  return apiRequest('/users', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+}
+
 export async function approvePendingUser(token: string, userId: string) {
   return apiRequest(`/users/${userId}/approve`, {
     method: 'PATCH',
