@@ -4,8 +4,8 @@ const Member = require("../models/Member");
 const getCouples = async (req, res) => {
   try {
     const couples = await Relation.find({ type: "couple" })
-      .populate("membre1_id", "nom prenom")
-      .populate("membre2_id", "nom prenom")
+      .populate("membre1_id", "nom prenom sexe dateNaissance")
+      .populate("membre2_id", "nom prenom sexe dateNaissance")
       .select("-__v");
 
     return res.status(200).json({
@@ -15,6 +15,25 @@ const getCouples = async (req, res) => {
     });
   } catch (err) {
     console.error("getCouples error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+      error: "SERVER_ERROR",
+    });
+  }
+};
+
+const getChildren = async (req, res) => {
+  try {
+    const children = await Relation.find({ type: "enfant" }).select("-__v");
+
+    return res.status(200).json({
+      success: true,
+      message: "Liste des liens enfant",
+      data: { children },
+    });
+  } catch (err) {
+    console.error("getChildren error:", err);
     return res.status(500).json({
       success: false,
       message: "Erreur serveur",
@@ -184,4 +203,4 @@ const createChild = async (req, res) => {
   }
 };
 
-module.exports = { getCouples, createCouple, createChild };
+module.exports = { getCouples, getChildren, createCouple, createChild };

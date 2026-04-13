@@ -13,6 +13,13 @@ export const appColors = {
   codeBackground: '#e4eee4',
   dangerSoft: '#f7e2e0',
   dangerBorder: '#d7a09c',
+  maleSoft: '#dceeff',
+  maleBorder: '#7eb6e8',
+  femaleSoft: '#ffe2ef',
+  femaleBorder: '#ea8fb5',
+  coupleActive: '#c43d3d',
+  coupleSeparated: '#8b918c',
+  childLink: '#111111',
 };
 
 export const appStyles = StyleSheet.create({
@@ -242,5 +249,59 @@ export const appStyles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 28,
     fontWeight: '700',
+  },
+  treeViewport: {
+    flex: 1,
+  },
+  treeCanvas: {
+    position: 'relative',
+  },
+  treeLine: {
+    position: 'absolute',
+    backgroundColor: appColors.childLink,
+  },
+  treeNode: {
+    position: 'absolute',
+  },
+  treeMemberCard: {
+    width: 132,
+    minHeight: 64,
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 14,
+    backgroundColor: appColors.surface,
+    padding: 10,
+    justifyContent: 'center',
+  },
+  treeMemberCardMale: {
+    backgroundColor: appColors.maleSoft,
+    borderColor: appColors.maleBorder,
+  },
+  treeMemberCardFemale: {
+    backgroundColor: appColors.femaleSoft,
+    borderColor: appColors.femaleBorder,
+  },
+  treeMemberName: {
+    color: appColors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  treeMemberInfo: {
+    color: appColors.muted,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  treeCoupleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  treeCoupleLink: {
+    width: 36,
+    height: 2,
+  },
+  treeEmptyCard: {
+    margin: 24,
   },
 });

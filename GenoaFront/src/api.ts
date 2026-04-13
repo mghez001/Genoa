@@ -199,6 +199,15 @@ export async function getCouples(token: string) {
   });
 }
 
+export async function getChildRelations(token: string) {
+  return apiRequest('/relations/children', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export async function createCouple(token: string, input: any) {
   return apiRequest('/relations/couples', {
     method: 'POST',
