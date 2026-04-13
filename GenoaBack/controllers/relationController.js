@@ -1,6 +1,28 @@
 const Relation = require("../models/Relation");
 const Member = require("../models/Member");
 
+const getCouples = async (req, res) => {
+  try {
+    const couples = await Relation.find({ type: "couple" })
+      .populate("membre1_id", "nom prenom")
+      .populate("membre2_id", "nom prenom")
+      .select("-__v");
+
+    return res.status(200).json({
+      success: true,
+      message: "Liste des couples",
+      data: { couples },
+    });
+  } catch (err) {
+    console.error("getCouples error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+      error: "SERVER_ERROR",
+    });
+  }
+};
+
 const createCouple = async (req, res) => {
   try {
     const { membre1_id, membre2_id, dateUnion, dateSeparation } = req.body;
@@ -96,6 +118,17 @@ const createChild = async (req, res) => {
       });
     }
 
+    if (
+      couple.membre1_id?.toString() === enfant_id ||
+      couple.membre2_id?.toString() === enfant_id
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "L'enfant ne peut pas être un des membres du couple",
+        error: "CHILD_IS_COUPLE_MEMBER",
+      });
+    }
+
     // Vérifier que l'enfant existe
     const enfant = await Member.findById(enfant_id);
     if (!enfant) {
@@ -151,4 +184,4 @@ const createChild = async (req, res) => {
   }
 };
 
-module.exports = { createCouple, createChild };
+module.exports = { getCouples, createCouple, createChild };

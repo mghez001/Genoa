@@ -171,8 +171,8 @@ export async function getFamilyStats(token: string) {
   });
 }
 
-export async function getMembers(token: string) {
-  return apiRequest('/members', {
+export async function getMembers(token: string, query = '') {
+  return apiRequest(`/members${query}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -182,6 +182,35 @@ export async function getMembers(token: string) {
 
 export async function createMember(token: string, input: any) {
   return apiRequest('/members', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getCouples(token: string) {
+  return apiRequest('/relations/couples', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createCouple(token: string, input: any) {
+  return apiRequest('/relations/couples', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function createChildRelation(token: string, input: any) {
+  return apiRequest('/relations/children', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
