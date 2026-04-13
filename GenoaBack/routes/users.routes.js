@@ -4,10 +4,10 @@ const { getApprovedUsers, getPendingUsers, approveUser, rejectPendingUser, updat
 const authMiddleware = require("../middleware/authMiddleware");
 const requireRole = require("../middleware/roleMiddleware");
 
-router.get("/", authMiddleware, requireRole("editor"), getApprovedUsers);
+router.get("/", authMiddleware, requireRole("admin"), getApprovedUsers);
 router.get("/pending", authMiddleware, requireRole("admin"), getPendingUsers);
 router.patch("/:id/approve", authMiddleware, requireRole("admin"), approveUser);
 router.delete("/:id/reject", authMiddleware, requireRole("admin"), rejectPendingUser);
-router.patch("/:id/role", authMiddleware, requireRole("editor"), updateRole);
+router.patch("/:id/role", authMiddleware, requireRole("admin"), updateRole);
 
 module.exports = router;

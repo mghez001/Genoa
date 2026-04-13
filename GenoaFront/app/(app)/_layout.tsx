@@ -5,7 +5,7 @@ import { useSession } from '../../src/ctx';
 
 export default function Layout() {
   const { user } = useSession();
-  const canAccessModeration = user?.role === 'admin' || user?.role === 'editor';
+  const canAccessModeration = user?.role === 'admin';
 
   return (
     <Drawer

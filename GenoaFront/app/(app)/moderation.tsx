@@ -15,10 +15,10 @@ import { useSession } from '../../src/ctx';
 
 export default function Moderation() {
   const { session, user } = useSession();
-  const canAccessModeration = user?.role === 'admin' || user?.role === 'editor';
   const isAdmin = user?.role === 'admin';
-  const canManageRoles = user?.role === 'admin' || user?.role === 'editor';
-  const assignableRoles = user?.role === 'admin' ? ['reader', 'editor', 'admin'] : ['reader', 'editor'];
+  const canAccessModeration = isAdmin;
+  const canManageRoles = isAdmin;
+  const assignableRoles = ['reader', 'editor', 'admin'];
 
   const [approvedUsers, setApprovedUsers] = useState<any[]>([]);
   const [selectedRoleUserId, setSelectedRoleUserId] = useState<string | null>(null);
@@ -282,7 +282,7 @@ export default function Moderation() {
 
         {!canManageRoles ? (
           <Text style={appStyles.itemText}>
-            Cette section est réservée aux éditeurs et aux administrateurs.
+            Cette section est réservée aux administrateurs.
           </Text>
         ) : null}
         {canManageRoles && isRolesLoading ? <Text style={appStyles.itemText}>Chargement...</Text> : null}
