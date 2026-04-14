@@ -115,6 +115,19 @@ export const appStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  dangerButton: {
+    backgroundColor: '#b43d35',
+    borderRadius: 14,
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  dangerButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   secondaryButton: {
     borderWidth: 1,
     borderColor: appColors.primary,
@@ -281,6 +294,10 @@ export const appStyles = StyleSheet.create({
     backgroundColor: appColors.femaleSoft,
     borderColor: appColors.femaleBorder,
   },
+  treeMemberCardSelected: {
+    borderWidth: 2,
+    borderColor: appColors.primaryDark,
+  },
   treeMemberName: {
     color: appColors.text,
     fontSize: 14,
@@ -303,5 +320,20 @@ export const appStyles = StyleSheet.create({
   },
   treeEmptyCard: {
     margin: 24,
+  },
+  memberEditPanel: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 96,
+    maxHeight: '72%',
+    backgroundColor: appColors.surface,
+    borderWidth: 1,
+    borderColor: appColors.border,
+    borderRadius: 18,
+    padding: 16,
+  },
+  memberEditContent: {
+    gap: 12,
   },
 });

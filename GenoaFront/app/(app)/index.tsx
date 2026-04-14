@@ -1,9 +1,16 @@
 import { Graph, layout } from '@dagrejs/dagre';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { AuthApiError, getChildRelations, getCouples, getMembers } from '../../src/api';
+import {
+  AuthApiError,
+  deleteMember,
+  getChildRelations,
+  getCouples,
+  getMembers,
+  updateMember,
+} from '../../src/api';
 import { appColors, appStyles } from '../../src/appStyles';
 import { useSession } from '../../src/ctx';
 
@@ -16,6 +23,39 @@ const CANVAS_PADDING = 32;
 
 function getId(value: any) {
   return typeof value === 'string' ? value : value?._id;
+}
+
+function formatDateInput(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+
+  if (digits.length <= 4) {
+    return digits;
+  }
+
+  if (digits.length <= 6) {
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+}
+
+function formatDateForInput(value: string | null | undefined) {
+  if (!value) {
+    return '';
+  }
+
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function parseList(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function formatList(value: string[] | null | undefined) {
+  return value?.join(', ') ?? '';
 }
 
 function getMemberLabel(member: any) {
@@ -31,16 +71,20 @@ function getMemberInfo(member: any) {
   return new Date(member.dateNaissance).getFullYear().toString();
 }
 
-function memberCard(member: any) {
+function memberCard(member: any, onPress?: (member: any) => void, isSelected = false) {
   const genderStyle =
     member?.sexe === 'homme'
       ? appStyles.treeMemberCardMale
       : member?.sexe === 'femme'
         ? appStyles.treeMemberCardFemale
         : null;
-
-  return (
-    <View style={[appStyles.treeMemberCard, genderStyle]}>
+  const card = (
+    <View
+      style={[
+        appStyles.treeMemberCard,
+        genderStyle,
+        isSelected ? appStyles.treeMemberCardSelected : null,
+      ]}>
       <Text numberOfLines={2} style={appStyles.treeMemberName}>
         {getMemberLabel(member)}
       </Text>
@@ -48,6 +92,16 @@ function memberCard(member: any) {
         <Text style={appStyles.treeMemberInfo}>{getMemberInfo(member)}</Text>
       ) : null}
     </View>
+  );
+
+  if (!onPress) {
+    return card;
+  }
+
+  return (
+    <Pressable onPress={() => onPress(member)}>
+      {card}
+    </Pressable>
   );
 }
 
@@ -190,6 +244,20 @@ function lineStyle(x: number, y: number, width: number, height: number) {
   };
 }
 
+async function loadTreeData(session: string) {
+  const [membersResponse, couplesResponse, childrenResponse] = await Promise.all([
+    getMembers(session, '?limit=1000'),
+    getCouples(session),
+    getChildRelations(session),
+  ]);
+
+  return {
+    members: membersResponse.data.members,
+    couples: couplesResponse.data.couples,
+    children: childrenResponse.data.children,
+  };
+}
+
 export default function Index() {
   const router = useRouter();
   const { session, user } = useSession();
@@ -198,8 +266,133 @@ export default function Index() {
   const [childRelations, setChildRelations] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [editNom, setEditNom] = useState('');
+  const [editPrenom, setEditPrenom] = useState('');
+  const [editSexe, setEditSexe] = useState('');
+  const [editDateNaissance, setEditDateNaissance] = useState('');
+  const [editDateDeces, setEditDateDeces] = useState('');
+  const [editPhotoURL, setEditPhotoURL] = useState('');
+  const [editEmails, setEditEmails] = useState('');
+  const [editTelephones, setEditTelephones] = useState('');
+  const [editAdresses, setEditAdresses] = useState('');
+  const [editProfessions, setEditProfessions] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [editError, setEditError] = useState('');
+  const [isEditingMember, setIsEditingMember] = useState(false);
+  const [isDeletingMember, setIsDeletingMember] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const canAddElement = user?.role === 'admin' || user?.role === 'editor';
   const tree = buildTree(members, couples, childRelations);
+
+  const refreshTree = async () => {
+    if (!session) {
+      return;
+    }
+
+    const treeData = await loadTreeData(session);
+    setMembers(treeData.members);
+    setCouples(treeData.couples);
+    setChildRelations(treeData.children);
+  };
+
+  const selectMember = (member: any) => {
+    if (!canAddElement) {
+      return;
+    }
+
+    setSelectedMember(member);
+    setEditNom(member.nom ?? '');
+    setEditPrenom(member.prenom ?? '');
+    setEditSexe(member.sexe ?? '');
+    setEditDateNaissance(formatDateForInput(member.dateNaissance));
+    setEditDateDeces(formatDateForInput(member.dateDeces));
+    setEditPhotoURL(member.photoURL ?? '');
+    setEditEmails(formatList(member.emails));
+    setEditTelephones(formatList(member.telephones));
+    setEditAdresses(formatList(member.adresses));
+    setEditProfessions(formatList(member.professions));
+    setEditMessage('');
+    setEditError('');
+    setIsConfirmingDelete(false);
+  };
+
+  const closeMemberPanel = () => {
+    setSelectedMember(null);
+    setEditMessage('');
+    setEditError('');
+    setIsConfirmingDelete(false);
+  };
+
+  const handleUpdateMember = async () => {
+    if (!session || !selectedMember) {
+      return;
+    }
+
+    setIsEditingMember(true);
+    setEditMessage('');
+    setEditError('');
+
+    try {
+      const response = await updateMember(session, selectedMember._id, {
+        nom: editNom.trim(),
+        prenom: editPrenom.trim(),
+        sexe: editSexe || undefined,
+        dateNaissance: editDateNaissance || null,
+        dateDeces: editDateDeces || null,
+        photoURL: editPhotoURL.trim() || undefined,
+        emails: parseList(editEmails),
+        telephones: parseList(editTelephones),
+        adresses: parseList(editAdresses),
+        professions: parseList(editProfessions),
+      });
+
+      setSelectedMember(response.data.member);
+      setEditMessage(response.message);
+      await refreshTree();
+    } catch (updateError) {
+      const message =
+        updateError instanceof AuthApiError
+          ? updateError.message
+          : 'Impossible de modifier ce membre.';
+
+      setEditError(message);
+    } finally {
+      setIsEditingMember(false);
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!session || !selectedMember) {
+      return;
+    }
+
+    if (!isConfirmingDelete) {
+      setIsConfirmingDelete(true);
+      setEditMessage('');
+      setEditError('Cliquez encore sur confirmer pour supprimer ce membre et ses liens.');
+      return;
+    }
+
+    setIsDeletingMember(true);
+    setEditMessage('');
+    setEditError('');
+
+    try {
+      await deleteMember(session, selectedMember._id);
+      closeMemberPanel();
+      await refreshTree();
+    } catch (deleteError) {
+      const message =
+        deleteError instanceof AuthApiError
+          ? deleteError.message
+          : 'Impossible de supprimer ce membre.';
+
+      setEditError(message);
+    } finally {
+      setIsDeletingMember(false);
+    }
+  };
 
   useEffect(() => {
     if (!session) {
@@ -217,19 +410,15 @@ export default function Index() {
       setError(null);
 
       try {
-        const [membersResponse, couplesResponse, childrenResponse] = await Promise.all([
-          getMembers(session, '?limit=1000'),
-          getCouples(session),
-          getChildRelations(session),
-        ]);
+        const treeData = await loadTreeData(session);
 
         if (isCancelled) {
           return;
         }
 
-        setMembers(membersResponse.data.members);
-        setCouples(couplesResponse.data.couples);
-        setChildRelations(childrenResponse.data.children);
+        setMembers(treeData.members);
+        setCouples(treeData.couples);
+        setChildRelations(treeData.children);
       } catch (loadError) {
         if (isCancelled) {
           return;
@@ -321,7 +510,7 @@ export default function Index() {
                 if (node.type === 'couple') {
                   const member1 = node.couple.membre1_id;
                   const member2 = node.couple.membre2_id;
-                  const isSeparated = Boolean(node.couple.dateSeparation);
+                  const isSeparated = Boolean(node.couple.isSeparated || node.couple.dateSeparation);
 
                   return (
                     <View
@@ -336,9 +525,17 @@ export default function Index() {
                         },
                       ]}>
                       <View style={appStyles.treeCoupleRow}>
-                        {memberCard(member1)}
+                        {memberCard(
+                          member1,
+                          canAddElement ? selectMember : undefined,
+                          selectedMember?._id === getId(member1)
+                        )}
                         {coupleLink(isSeparated)}
-                        {memberCard(member2)}
+                        {memberCard(
+                          member2,
+                          canAddElement ? selectMember : undefined,
+                          selectedMember?._id === getId(member2)
+                        )}
                       </View>
                     </View>
                   );
@@ -356,13 +553,182 @@ export default function Index() {
                         height: node.height,
                       },
                     ]}>
-                    {memberCard(node.member)}
+                    {memberCard(
+                      node.member,
+                      canAddElement ? selectMember : undefined,
+                      selectedMember?._id === getId(node.member)
+                    )}
                   </View>
                 );
               })}
             </View>
           </ScrollView>
         </ScrollView>
+      ) : null}
+
+      {canAddElement && selectedMember ? (
+        <View style={appStyles.memberEditPanel}>
+          <ScrollView contentContainerStyle={appStyles.memberEditContent}>
+            <View style={appStyles.row}>
+              <Text style={appStyles.cardTitle}>Modifier le membre</Text>
+              <Pressable onPress={closeMemberPanel} style={appStyles.ghostButton}>
+                <Text style={appStyles.ghostButtonText}>Fermer</Text>
+              </Pressable>
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Nom</Text>
+              <TextInput value={editNom} onChangeText={setEditNom} style={appStyles.input} />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Prénom</Text>
+              <TextInput value={editPrenom} onChangeText={setEditPrenom} style={appStyles.input} />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Sexe</Text>
+              <View style={appStyles.row}>
+                <Pressable
+                  onPress={() => setEditSexe('homme')}
+                  style={[
+                    appStyles.secondaryButton,
+                    editSexe === 'homme' ? appStyles.secondaryButtonSelected : null,
+                  ]}>
+                  <Text style={appStyles.secondaryButtonText}>Homme</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setEditSexe('femme')}
+                  style={[
+                    appStyles.secondaryButton,
+                    editSexe === 'femme' ? appStyles.secondaryButtonSelected : null,
+                  ]}>
+                  <Text style={appStyles.secondaryButtonText}>Femme</Text>
+                </Pressable>
+              </View>
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Date de naissance</Text>
+              <TextInput
+                value={editDateNaissance}
+                onChangeText={(value) => setEditDateNaissance(formatDateInput(value))}
+                placeholder="AAAA-MM-JJ"
+                placeholderTextColor={appColors.muted}
+                keyboardType="number-pad"
+                maxLength={10}
+                style={appStyles.input}
+              />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Date de décès</Text>
+              <TextInput
+                value={editDateDeces}
+                onChangeText={(value) => setEditDateDeces(formatDateInput(value))}
+                placeholder="AAAA-MM-JJ"
+                placeholderTextColor={appColors.muted}
+                keyboardType="number-pad"
+                maxLength={10}
+                style={appStyles.input}
+              />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Photo URL</Text>
+              <TextInput value={editPhotoURL} onChangeText={setEditPhotoURL} style={appStyles.input} />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Emails</Text>
+              <TextInput
+                value={editEmails}
+                onChangeText={setEditEmails}
+                placeholder="séparés par des virgules"
+                placeholderTextColor={appColors.muted}
+                style={appStyles.input}
+              />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Téléphones</Text>
+              <TextInput
+                value={editTelephones}
+                onChangeText={setEditTelephones}
+                placeholder="séparés par des virgules"
+                placeholderTextColor={appColors.muted}
+                style={appStyles.input}
+              />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Adresses</Text>
+              <TextInput
+                value={editAdresses}
+                onChangeText={setEditAdresses}
+                placeholder="séparées par des virgules"
+                placeholderTextColor={appColors.muted}
+                style={appStyles.input}
+              />
+            </View>
+
+            <View style={appStyles.fieldGroup}>
+              <Text style={appStyles.label}>Professions</Text>
+              <TextInput
+                value={editProfessions}
+                onChangeText={setEditProfessions}
+                placeholder="séparées par des virgules"
+                placeholderTextColor={appColors.muted}
+                style={appStyles.input}
+              />
+            </View>
+
+            <Pressable
+              onPress={() => {
+                void handleUpdateMember();
+              }}
+              disabled={isEditingMember || isDeletingMember}
+              style={[
+                appStyles.primaryButton,
+                isEditingMember || isDeletingMember ? appStyles.primaryButtonDisabled : null,
+              ]}>
+              <Text style={appStyles.primaryButtonText}>
+                {isEditingMember ? 'Modification...' : 'Modifier le membre'}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                void handleDeleteMember();
+              }}
+              disabled={isEditingMember || isDeletingMember}
+              style={[
+                appStyles.dangerButton,
+                isEditingMember || isDeletingMember ? appStyles.primaryButtonDisabled : null,
+              ]}>
+              <Text style={appStyles.dangerButtonText}>
+                {isDeletingMember
+                  ? 'Suppression...'
+                  : isConfirmingDelete
+                    ? 'Confirmer la suppression'
+                    : 'Supprimer le membre'}
+              </Text>
+            </Pressable>
+
+            {editMessage ? (
+              <View style={[appStyles.messageBox, appStyles.infoMessage]}>
+                <Text style={appStyles.messageText}>{editMessage}</Text>
+              </View>
+            ) : null}
+
+            {editError ? (
+              <View style={[appStyles.messageBox, appStyles.errorMessage]}>
+                <Text style={appStyles.messageText}>{editError}</Text>
+              </View>
+            ) : null}
+          </ScrollView>
+        </View>
       ) : null}
 
       {canAddElement ? (

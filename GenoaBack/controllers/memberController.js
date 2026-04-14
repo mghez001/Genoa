@@ -1,4 +1,5 @@
 const Member = require("../models/Member");
+const Relation = require("../models/Relation");
 
 const createMember = async (req, res) => {
   try {
@@ -170,7 +171,7 @@ const updateMember = async (req, res) => {
 
 const deleteMember = async (req, res) => {
   try {
-    const member = await Member.findByIdAndDelete(req.params.id);
+    const member = await Member.findById(req.params.id);
 
     if (!member) {
       return res.status(404).json({
@@ -180,10 +181,31 @@ const deleteMember = async (req, res) => {
       });
     }
 
+    const coupleRelations = await Relation.find({
+      type: "couple",
+      $or: [
+        { membre1_id: req.params.id },
+        { membre2_id: req.params.id },
+      ],
+    }).select("_id");
+    const coupleIds = coupleRelations.map((relation) => relation._id);
+
+    const deletedRelations = await Relation.deleteMany({
+      $or: [
+        { _id: { $in: coupleIds } },
+        { type: "enfant", enfant_id: req.params.id },
+        { type: "enfant", couple_id: { $in: coupleIds } },
+      ],
+    });
+
+    await Member.findByIdAndDelete(req.params.id);
+
     return res.status(200).json({
       success: true,
       message: "Membre supprimé",
-      data: null,
+      data: {
+        deletedRelations: deletedRelations.deletedCount,
+      },
     });
   } catch (err) {
     console.error("deleteMember error:", err);

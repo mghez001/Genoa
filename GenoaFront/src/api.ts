@@ -190,6 +190,25 @@ export async function createMember(token: string, input: any) {
   });
 }
 
+export async function updateMember(token: string, memberId: string, input: any) {
+  return apiRequest(`/members/${memberId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteMember(token: string, memberId: string) {
+  return apiRequest(`/members/${memberId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export async function getCouples(token: string) {
   return apiRequest('/relations/couples', {
     method: 'GET',
